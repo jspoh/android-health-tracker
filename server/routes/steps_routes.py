@@ -31,3 +31,8 @@ def sync_steps(body: StepsSyncPayload, current_user: UserModel = Depends(get_cur
 @router.get("/", response_model=list[DailyStepsResponse])
 def get_steps(current_user: UserModel = Depends(get_current_user), db: Session = Depends(get_db)):
     return db.query(DailyStepsModel).filter_by(user_id=current_user.id).order_by(DailyStepsModel.date).all()
+
+
+@router.get("/target")
+def get_step_target(current_user: UserModel = Depends(get_current_user)):
+    return {"step_target": current_user.step_target}
