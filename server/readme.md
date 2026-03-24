@@ -36,5 +36,5 @@ On every db update,
 
 ## Authentication
 
-- Hashing handled with `passlib[bcrypt]`
+- Hashing handled with `bcrypt`
 - JWT (infinite lifespan to prevent relogins)
