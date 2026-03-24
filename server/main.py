@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from dotenv import load_dotenv
 
 from routes.users_routes import router as users_router
+from routes.activity_routes import router as activity_router
 
 load_dotenv(".env")
 ENV = os.environ["ENV"]
@@ -23,3 +24,4 @@ def status():
 
 
 app.include_router(users_router)
+app.include_router(activity_router)
