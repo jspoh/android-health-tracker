@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends
+from datetime import date, timedelta
+
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy.dialects.sqlite import insert
 
@@ -36,3 +38,22 @@ def get_steps(current_user: UserModel = Depends(get_current_user), db: Session =
 @router.get("/target")
 def get_step_target(current_user: UserModel = Depends(get_current_user)):
     return {"step_target": current_user.step_target}
+
+
+@router.get("/date/{day}", response_model=DailyStepsResponse)
+def get_steps_by_date(day: date, current_user: UserModel = Depends(get_current_user), db: Session = Depends(get_db)):
+    record = db.query(DailyStepsModel).filter_by(user_id=current_user.id, date=day).first()
+    if not record:
+        return DailyStepsResponse(date=day, steps=0)
+    return record
+
+
+@router.get("/last/{n}", response_model=list[DailyStepsResponse])
+def get_steps_last_n_days(n: int, current_user: UserModel = Depends(get_current_user), db: Session = Depends(get_db)):
+    since = date.today() - timedelta(days=n - 1)
+    return (
+        db.query(DailyStepsModel)
+        .filter(DailyStepsModel.user_id == current_user.id, DailyStepsModel.date >= since)
+        .order_by(DailyStepsModel.date)
+        .all()
+    )
