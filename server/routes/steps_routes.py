@@ -57,3 +57,19 @@ def get_steps_last_n_days(n: int, current_user: UserModel = Depends(get_current_
         .order_by(DailyStepsModel.date)
         .all()
     )
+
+
+@router.get("/range", response_model=list[DailyStepsResponse])
+def get_steps_range(start: date = Query(...), end: date = Query(...), current_user: UserModel = Depends(get_current_user), db: Session = Depends(get_db)):
+    return (
+        db.query(DailyStepsModel)
+        .filter(DailyStepsModel.user_id == current_user.id, DailyStepsModel.date >= start, DailyStepsModel.date <= end)
+        .order_by(DailyStepsModel.date)
+        .all()
+    )
+
+
+@router.delete("/date/{day}", status_code=204)
+def delete_steps_by_date(day: date, current_user: UserModel = Depends(get_current_user), db: Session = Depends(get_db)):
+    db.query(DailyStepsModel).filter_by(user_id=current_user.id, date=day).delete()
+    db.commit()
