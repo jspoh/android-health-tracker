@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from db import get_db
@@ -57,3 +57,25 @@ def get_activities_last_n_days(n: int, current_user: UserModel = Depends(get_cur
     .order_by(ActivityModel.start)
     .all()
   )
+
+
+@router.get("/range")
+def get_activities_range(start: date = Query(...), end: date = Query(...), current_user: UserModel = Depends(get_current_user), db: Session = Depends(get_db)):
+  return (
+    db.query(ActivityModel)
+    .filter(
+      ActivityModel.user_id == current_user.id,
+      ActivityModel.start >= f"{start} 00:00:00",
+      ActivityModel.start <= f"{end} 23:59:59"
+    )
+    .order_by(ActivityModel.start)
+    .all()
+  )
+
+
+@router.delete("/{activity_id}", status_code=204)
+def delete_activity(activity_id: int, current_user: UserModel = Depends(get_current_user), db: Session = Depends(get_db)):
+  deleted = db.query(ActivityModel).filter_by(id=activity_id, user_id=current_user.id).delete()
+  if not deleted:
+    raise HTTPException(status_code=404, detail="Activity not found")
+  db.commit()
