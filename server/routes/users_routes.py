@@ -9,7 +9,7 @@ from utils.auth import hash_password, verify_password, create_access_token, get_
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.post("/", response_model=GetUserResponse)
+@router.post("/", response_model=GetUserResponse, status_code=201)
 def create_user(body: CreateUserPayload, db: Session = Depends(get_db)):
     if db.query(UserModel).filter(UserModel.email == body.email).first():
         raise HTTPException(status_code=409, detail="Email already registered")

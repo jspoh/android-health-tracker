@@ -10,7 +10,7 @@ from utils.auth import get_current_user
 router = APIRouter(prefix="/activity", tags=["activity"])
 
 
-@router.post("/log")
+@router.post("/log", status_code=201)
 def create_activity(body: ActivityLogPayload, current_user: UserModel = Depends(get_current_user), db: Session = Depends(get_db)):
   
   new_activity = ActivityModel(
