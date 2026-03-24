@@ -36,7 +36,7 @@ def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     db: Session = Depends(get_db),
 ):
-    from models.UserModel import User  # avoid circular import
+    from models.UserModel import UserModel  # avoid circular import
 
     token = credentials.credentials
     try:
@@ -47,7 +47,7 @@ def get_current_user(
     except (JWTError, ValueError):
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
-    user = db.query(User).filter(User.id == int(user_id)).first()
+    user = db.query(UserModel).filter(UserModel.id == int(user_id)).first()
     if user is None:
         raise HTTPException(status_code=401, detail="User not found")
     return user

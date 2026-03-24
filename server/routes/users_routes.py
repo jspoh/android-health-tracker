@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from db import get_db
-from models.UserModel import User
+from models.UserModel import UserModel
 from schemas.user_schemas import GetUserResponse, CreateUserPayload, LoginPayload, LoginResponse
 from utils.auth import hash_password, verify_password, create_access_token, get_current_user
 
@@ -11,9 +11,9 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 @router.post("/", response_model=GetUserResponse)
 def create_user(body: CreateUserPayload, db: Session = Depends(get_db)):
-    if db.query(User).filter(User.email == body.email).first():
+    if db.query(UserModel).filter(UserModel.email == body.email).first():
         raise HTTPException(status_code=409, detail="Email already registered")
-    db_user = User(
+    db_user = UserModel(
         username=body.username,
         email=body.email,
         password_hash=hash_password(body.password)
@@ -26,22 +26,22 @@ def create_user(body: CreateUserPayload, db: Session = Depends(get_db)):
 
 @router.get("/", response_model=int)
 def get_user_count(db: Session = Depends(get_db)):
-    return db.query(User).count()
+    return db.query(UserModel).count()
 
 
 @router.get("/me", response_model=GetUserResponse)
-def get_me_for_testing_bearer_token(current_user: User = Depends(get_current_user)):
+def get_me_for_testing_bearer_token(current_user: UserModel = Depends(get_current_user)):
     return current_user
 
 
 @router.get("/{username}", response_model=GetUserResponse)
 def read_user(username: str, db: Session = Depends(get_db)):
-    return db.query(User).filter(User.username == username).first()
+    return db.query(UserModel).filter(UserModel.username == username).first()
 
 
 @router.post("/login", response_model=LoginResponse)
 def login(body: LoginPayload, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.username == body.username).first()
+    user = db.query(UserModel).filter(UserModel.username == body.username).first()
     if not user or not verify_password(body.password, str(user.password_hash)):
         raise HTTPException(status_code=401, detail="Invalid username or password")
     token = create_access_token(int(str(user.id)))

@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 
 from db import Base
 
-class Activity(Base):
+class ActivityModel(Base):
   __tablename__ = "activities"
   id = Column(Integer, primary_key=True, index=True)
   user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
@@ -14,4 +14,4 @@ class Activity(Base):
   steps_taken = Column(Integer, nullable=True)
   max_hr = Column(Integer, nullable=True)
 
-  user = relationship("User")
+  user = relationship("UserModel")
