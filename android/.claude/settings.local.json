@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:api_fittrack.jspoh.dev)",
+      "WebFetch(domain:api-fittrack.jspoh.dev)"
+    ]
+  }
+}

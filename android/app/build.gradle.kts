@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.hilt.android.plugin)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -32,6 +34,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true
     }
     kotlinOptions {
         jvmTarget = "11"
@@ -50,6 +53,44 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.extended)
+
+    // Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
+
+    // Retrofit + OkHttp
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
+    implementation(libs.okhttp.logging)
+
+    // Room
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+
+    // Navigation
+    implementation(libs.navigation.compose)
+
+    // ViewModel + Compose
+    implementation(libs.lifecycle.viewmodel.compose)
+
+    // DataStore
+    implementation(libs.datastore.preferences)
+
+    // Google Play Services — Activity Recognition
+    implementation(libs.gms.location)
+
+    // Coroutines
+    implementation(libs.coroutines.android)
+
+    // Gson
+    implementation(libs.gson)
+
+    // Java 8+ desugaring (for LocalDate/LocalDateTime on API < 26)
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
