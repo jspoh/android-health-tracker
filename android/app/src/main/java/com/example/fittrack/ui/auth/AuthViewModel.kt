@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 import javax.inject.Inject
 
 sealed class AuthUiState {
@@ -32,7 +33,13 @@ class AuthViewModel @Inject constructor(
             _authState.value = AuthUiState.Loading
             loginUseCase(username, password)
                 .onSuccess { _authState.value = AuthUiState.Success }
-                .onFailure { _authState.value = AuthUiState.Error(it.message ?: "Login failed") }
+                .onFailure {
+                    val message = if (it is HttpException && it.code() == 401)
+                        "Username or Password is wrong"
+                    else
+                        it.message ?: "Login failed"
+                    _authState.value = AuthUiState.Error(message)
+                }
         }
     }
 
