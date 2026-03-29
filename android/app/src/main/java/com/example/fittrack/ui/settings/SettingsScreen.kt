@@ -37,11 +37,22 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) {
+        viewModel.setAutoTracking(true)
+    }
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) {
-            viewModel.setAutoTracking(true)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                !viewModel.hasNotificationPermission()
+            ) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                viewModel.setAutoTracking(true)
+            }
         }
     }
 
@@ -94,6 +105,10 @@ fun SettingsScreen(
                                 !viewModel.hasPermission()
                             ) {
                                 permissionLauncher.launch(Manifest.permission.ACTIVITY_RECOGNITION)
+                            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                                !viewModel.hasNotificationPermission()
+                            ) {
+                                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                             } else {
                                 viewModel.setAutoTracking(true)
                             }

@@ -5,12 +5,10 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.fittrack.core.constants.ApiConstants
 import com.example.fittrack.data.preferences.SettingsRepository
 import com.example.fittrack.data.sensors.ActivityRecognitionManager
-import com.example.fittrack.service.ActivityTrackingService
 import com.example.fittrack.ui.navigation.FitTrackNavGraph
 import com.example.fittrack.ui.theme.FitTrackTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -23,6 +21,10 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    companion object {
+        private const val TAG = "ActivityAutoStart"
+    }
 
     @Inject lateinit var settingsRepository: SettingsRepository
     @Inject lateinit var activityRecognitionManager: ActivityRecognitionManager
@@ -46,11 +48,14 @@ class MainActivity : ComponentActivity() {
 
         lifecycleScope.launch {
             val autoTrackingEnabled = settingsRepository.autoTrackingEnabled.first()
-            if (autoTrackingEnabled && activityRecognitionManager.hasPermission()) {
-                ContextCompat.startForegroundService(
-                    this@MainActivity,
-                    ActivityTrackingService.autoTrackIntent(this@MainActivity)
-                )
+            activityRecognitionManager.setAutoTrackingEnabled(autoTrackingEnabled)
+            if (autoTrackingEnabled) {
+                if (activityRecognitionManager.hasPermission()) {
+                    Log.d(TAG, "Self-healing transition registration on app launch")
+                    activityRecognitionManager.registerAutoTransitions()
+                } else {
+                    Log.w(TAG, "Auto tracking enabled, but activity recognition permission is missing")
+                }
             }
         }
 
