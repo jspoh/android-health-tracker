@@ -1,6 +1,7 @@
 package com.example.fittrack.ui.navigation
 
 sealed class Screen(val route: String) {
+    object Landing : Screen("landing")
     object Login : Screen("login")
     object Register : Screen("register")
     object Dashboard : Screen("dashboard")

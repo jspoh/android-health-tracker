@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.fittrack.ui.activity.ActivityScreen
+import com.example.fittrack.ui.landing.LandingScreen
 import com.example.fittrack.ui.auth.LoginScreen
 import com.example.fittrack.ui.auth.RegisterScreen
 import com.example.fittrack.ui.dashboard.DashboardScreen
@@ -16,9 +17,18 @@ import com.example.fittrack.ui.settings.SettingsScreen
 @Composable
 fun FitTrackNavGraph(
     navController: NavHostController = rememberNavController(),
-    startDestination: String = Screen.Login.route
+    startDestination: String = Screen.Landing.route
 ) {
     NavHost(navController = navController, startDestination = startDestination) {
+        composable(Screen.Landing.route) {
+            LandingScreen(
+                onNavigateToLogin = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Landing.route) { inclusive = true }
+                    }
+                }
+            )
+        }
         composable(Screen.Login.route) {
             LoginScreen(
                 onLoginSuccess = {

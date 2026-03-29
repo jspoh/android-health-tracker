@@ -35,7 +35,7 @@ class AuthViewModel @Inject constructor(
                 .onSuccess { _authState.value = AuthUiState.Success }
                 .onFailure {
                     val message = if (it is HttpException && it.code() == 401)
-                        "Username or Password is wrong"
+                        "Incorrect Username or Password."
                     else
                         it.message ?: "Login failed"
                     _authState.value = AuthUiState.Error(message)
