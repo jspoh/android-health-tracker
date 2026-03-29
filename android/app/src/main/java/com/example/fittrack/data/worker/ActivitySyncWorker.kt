@@ -30,25 +30,11 @@ class ActivitySyncWorker(
                 WorkerEntryPoint::class.java
             ).activityApiService()
 
-            val today = DateUtils.today()
-            val yesterday = DateUtils.formatDate(DateUtils.parseDate(today).minusDays(1))
-
-            Log.d(TAG, "Fetching activities from $yesterday to $today")
-            val remoteActivities = activityApiService.getActivitiesInRange(yesterday, today)
-            val localActivities = activityDao.getActivitiesInRange(yesterday, today)
-            val localIds = localActivities.map { it.id }.toSet()
-
-            val newRemoteActivities = remoteActivities.filter { it.id !in localIds }
-            if (newRemoteActivities.isNotEmpty()) {
-                Log.d(TAG, "Downloading ${newRemoteActivities.size} new activities from server")
-                activityDao.insertAll(newRemoteActivities.map { it.toEntity() })
+            val unsyncedActivities = activityDao.getUnsyncedActivities()
+            if (unsyncedActivities.isNotEmpty()) {
+                Log.d(TAG, "Uploading ${unsyncedActivities.size} unsynced activities")
             }
-
-            val unsyncedLocalActivities = localActivities.filter { it.id == 0 }
-            if (unsyncedLocalActivities.isNotEmpty()) {
-                Log.d(TAG, "Uploading ${unsyncedLocalActivities.size} local activities")
-            }
-            for (activity in unsyncedLocalActivities) {
+            for (activity in unsyncedActivities) {
                 try {
                     val response = activityApiService.logActivity(
                         ActivityLogPayload(
@@ -60,11 +46,21 @@ class ActivitySyncWorker(
                             notes = activity.notes
                         )
                     )
-                    activityDao.deleteById(activity.id)
-                    activityDao.insertAll(listOf(response.toEntity()))
+                    activityDao.markAsSynced(activity.id, response.id)
+                    Log.d(TAG, "Synced activity ${activity.id} -> server id ${response.id}")
                 } catch (e: Exception) {
-                    Log.e(TAG, "Failed to sync activity", e)
+                    Log.e(TAG, "Failed to sync activity ${activity.id}", e)
                 }
+            }
+
+            val today = DateUtils.today()
+            val yesterday = DateUtils.formatDate(DateUtils.parseDate(today).minusDays(1))
+
+            Log.d(TAG, "Fetching activities from $yesterday to $today")
+            val remoteActivities = activityApiService.getActivitiesInRange(yesterday, today)
+            if (remoteActivities.isNotEmpty()) {
+                Log.d(TAG, "Downloading ${remoteActivities.size} activities from server")
+                activityDao.insertAll(remoteActivities.map { it.toEntity() })
             }
 
             Log.d(TAG, "ActivitySyncWorker completed successfully")
@@ -86,6 +82,12 @@ class ActivitySyncWorker(
 }
 
 private fun com.example.fittrack.data.remote.dto.ActivityResponse.toEntity() = ActivityEntity(
-    id = id, start = start, end = end, activityType = activityType,
-    stepsTaken = stepsTaken, maxHr = maxHr, notes = notes
+    serverId = id,
+    start = start,
+    end = end,
+    activityType = activityType,
+    stepsTaken = stepsTaken,
+    maxHr = maxHr,
+    notes = notes,
+    synced = true
 )
