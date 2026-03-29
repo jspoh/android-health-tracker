@@ -28,7 +28,6 @@ class DashboardViewModel @Inject constructor(
     private val activityRepository: ActivityRepository,
     private val stepCounterManager: StepCounterManager,
     private val stepsRepository: StepsRepository,
-    private val activityRepository: ActivityRepository,
     private val syncManager: SyncManager
 ) : ViewModel() {
 
@@ -79,6 +78,8 @@ class DashboardViewModel @Inject constructor(
                 todaySteps = Steps(DateUtils.today(), displaySteps)
             )
         }
+    }
+
     fun syncNow() {
         syncManager.triggerImmediateSync()
     }
