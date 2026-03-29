@@ -6,7 +6,6 @@ import com.example.fittrack.core.utils.DateUtils
 import com.example.fittrack.domain.model.Activity
 import com.example.fittrack.domain.model.Steps
 import com.example.fittrack.domain.repository.ActivityRepository
-import com.example.fittrack.domain.repository.StepsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +22,6 @@ data class DashboardUiState(
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    private val stepsRepository: StepsRepository,
     private val activityRepository: ActivityRepository
 ) : ViewModel() {
 
@@ -39,11 +37,11 @@ class DashboardViewModel @Inject constructor(
             _uiState.value = DashboardUiState(isLoading = true)
             try {
                 val today = DateUtils.today()
-                val steps = stepsRepository.getStepsForDate(today)
                 val activities = activityRepository.getActivitiesForDate(today)
+                val totalSteps = activities.sumOf { it.stepsTaken }
                 _uiState.value = DashboardUiState(
                     isLoading = false,
-                    todaySteps = steps,
+                    todaySteps = Steps(today, totalSteps),
                     recentActivities = activities
                 )
             } catch (e: Exception) {

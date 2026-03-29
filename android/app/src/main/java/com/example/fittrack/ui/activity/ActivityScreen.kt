@@ -19,7 +19,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -27,9 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -43,9 +39,6 @@ fun ActivityScreen(
     viewModel: ActivityViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var steps by remember { mutableStateOf("0") }
-    var maxHr by remember { mutableStateOf("0") }
-    var notes by remember { mutableStateOf("") }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -95,26 +88,29 @@ fun ActivityScreen(
                     modifier = Modifier.fillMaxWidth().testTag("activity_start_button")
                 ) { Text("Start Tracking") }
             } else {
-                OutlinedTextField(
-                    value = steps, onValueChange = { steps = it },
-                    label = { Text("Steps Taken") }, modifier = Modifier.fillMaxWidth().testTag("activity_steps_field"), singleLine = true
+                Text(
+                    text = "${uiState.stepCount}",
+                    style = MaterialTheme.typography.displayLarge,
+                    modifier = Modifier.testTag("activity_live_steps")
                 )
-                OutlinedTextField(
-                    value = maxHr, onValueChange = { maxHr = it },
-                    label = { Text("Max Heart Rate (bpm)") }, modifier = Modifier.fillMaxWidth().testTag("activity_maxhr_field"), singleLine = true
+                Text(
+                    text = "steps",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                OutlinedTextField(
-                    value = notes, onValueChange = { notes = it },
-                    label = { Text("Notes") }, modifier = Modifier.fillMaxWidth().testTag("activity_notes_field")
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = formatElapsedTime(uiState.elapsedSeconds),
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.testTag("activity_elapsed_time")
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 Button(
-                    onClick = {
-                        viewModel.stopAndSave(
-                            stepsTaken = steps.toIntOrNull() ?: 0,
-                            maxHr = maxHr.toIntOrNull() ?: 0,
-                            notes = notes
-                        )
-                    },
+                    onClick = { viewModel.stopAndSave() },
                     modifier = Modifier.fillMaxWidth().testTag("activity_stop_save_button"),
                     enabled = !uiState.isSaving
                 ) {
@@ -128,4 +124,12 @@ fun ActivityScreen(
             }
         }
     }
+}
+
+private fun formatElapsedTime(totalSeconds: Long): String {
+    val hours = totalSeconds / 3600
+    val minutes = (totalSeconds % 3600) / 60
+    val seconds = totalSeconds % 60
+    return if (hours > 0) String.format("%d:%02d:%02d", hours, minutes, seconds)
+    else String.format("%02d:%02d", minutes, seconds)
 }

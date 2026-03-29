@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.example.fittrack.data.sensors.ActivityRecognitionManager
+import com.example.fittrack.data.sensors.StepCounterManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -17,6 +18,9 @@ class ActivityTrackingService : Service() {
 
     @Inject
     lateinit var activityRecognitionManager: ActivityRecognitionManager
+
+    @Inject
+    lateinit var stepCounterManager: StepCounterManager
 
     companion object {
         const val CHANNEL_ID = "fittrack_tracking_channel"
@@ -42,9 +46,11 @@ class ActivityTrackingService : Service() {
                 val notification = buildNotification()
                 startForeground(NOTIFICATION_ID, notification)
                 activityRecognitionManager.startTracking()
+                stepCounterManager.startCounting()
             }
             ACTION_STOP -> {
                 activityRecognitionManager.stopTracking()
+                stepCounterManager.stopCounting()
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
             }
