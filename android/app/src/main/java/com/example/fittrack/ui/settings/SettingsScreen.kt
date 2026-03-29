@@ -1,5 +1,9 @@
 package com.example.fittrack.ui.settings
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,6 +37,13 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            viewModel.setAutoTracking(true)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -76,7 +87,17 @@ fun SettingsScreen(
                     }
                     Switch(
                         checked = uiState.autoTrackingEnabled,
-                        onCheckedChange = { viewModel.setAutoTracking(it) },
+                        onCheckedChange = { enabled ->
+                            if (!enabled) {
+                                viewModel.setAutoTracking(false)
+                            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+                                !viewModel.hasPermission()
+                            ) {
+                                permissionLauncher.launch(Manifest.permission.ACTIVITY_RECOGNITION)
+                            } else {
+                                viewModel.setAutoTracking(true)
+                            }
+                        },
                         modifier = Modifier.testTag("settings_auto_tracking_switch")
                     )
                 }

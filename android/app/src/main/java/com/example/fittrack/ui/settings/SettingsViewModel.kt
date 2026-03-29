@@ -3,6 +3,8 @@ package com.example.fittrack.ui.settings
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.core.content.ContextCompat
+import com.example.fittrack.data.sensors.ActivityRecognitionManager
 import com.example.fittrack.data.preferences.SettingsRepository
 import com.example.fittrack.service.ActivityTrackingService
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,7 +23,8 @@ data class SettingsUiState(
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val activityRecognitionManager: ActivityRecognitionManager
 ) : ViewModel() {
 
     val uiState: StateFlow<SettingsUiState> =
@@ -35,12 +38,18 @@ class SettingsViewModel @Inject constructor(
 
     fun setAutoTracking(enabled: Boolean) {
         viewModelScope.launch {
+            if (enabled && !activityRecognitionManager.hasPermission()) return@launch
             settingsRepository.setAutoTracking(enabled)
             if (enabled) {
-                context.startForegroundService(ActivityTrackingService.startIntent(context))
+                ContextCompat.startForegroundService(
+                    context,
+                    ActivityTrackingService.autoTrackIntent(context)
+                )
             } else {
                 context.startService(ActivityTrackingService.stopIntent(context))
             }
         }
     }
+
+    fun hasPermission() = activityRecognitionManager.hasPermission()
 }

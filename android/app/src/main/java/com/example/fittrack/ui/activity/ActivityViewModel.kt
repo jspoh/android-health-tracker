@@ -3,6 +3,7 @@ package com.example.fittrack.ui.activity
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.core.content.ContextCompat
 import com.example.fittrack.core.utils.DateUtils
 import com.example.fittrack.data.sensors.ActivityRecognitionManager
 import com.example.fittrack.data.sensors.StepCounterManager
@@ -68,7 +69,7 @@ class ActivityViewModel @Inject constructor(
 
     fun startTracking() {
         trackingStartTime = LocalDateTime.now()
-        context.startForegroundService(ActivityTrackingService.startIntent(context))
+        ContextCompat.startForegroundService(context, ActivityTrackingService.startIntent(context))
         timerJob = viewModelScope.launch {
             val startMillis = System.currentTimeMillis()
             while (isActive) {
@@ -97,9 +98,7 @@ class ActivityViewModel @Inject constructor(
                 maxHr = 0,
                 notes = ""
             ).onSuccess {
-                val today = DateUtils.today()
-                val currentSteps = stepsRepository.getStepsForDate(today)?.steps ?: 0
-                syncStepsUseCase(today, currentSteps + finalSteps)
+                syncTodaySteps(finalSteps)
                 _uiState.value = _uiState.value.copy(isSaving = false, savedSuccess = true)
             }.onFailure {
                 _uiState.value = _uiState.value.copy(isSaving = false, error = it.message)
@@ -108,4 +107,12 @@ class ActivityViewModel @Inject constructor(
     }
 
     fun hasPermission() = activityRecognitionManager.hasPermission()
+
+    private suspend fun syncTodaySteps(sessionStepsFallback: Int) {
+        val today = DateUtils.today()
+        val syncedSteps = stepsRepository.getStepsForDate(today)?.steps ?: 0
+        val sensorSteps = stepCounterManager.dailySteps.value
+        val stepsToSync = maxOf(sensorSteps, syncedSteps + sessionStepsFallback)
+        syncStepsUseCase(today, stepsToSync)
+    }
 }
