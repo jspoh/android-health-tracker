@@ -35,9 +35,18 @@ class AuthViewModel @Inject constructor(
     }
     private fun checkExistingSession() {
         viewModelScope.launch {
+            _authState.value = AuthUiState.Loading // Lock the Splash Screen
+
             checkAuthUseCase()
                 .onSuccess { isLoggedIn ->
-                    if (isLoggedIn) _authState.value = AuthUiState.Success
+                    if (isLoggedIn) {
+                        _authState.value = AuthUiState.Success
+                    } else {
+                        _authState.value = AuthUiState.Idle
+                    }
+                }
+                .onFailure {
+                    _authState.value = AuthUiState.Error("Session Expired")
                 }
         }
     }

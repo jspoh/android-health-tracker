@@ -13,13 +13,28 @@ import com.example.fittrack.ui.dashboard.DashboardScreen
 import com.example.fittrack.ui.history.HistoryScreen
 import com.example.fittrack.ui.profile.ProfileScreen
 import com.example.fittrack.ui.settings.SettingsScreen
+import com.example.fittrack.ui.navigation.SplashScreen
 
 @Composable
 fun FitTrackNavGraph(
     navController: NavHostController = rememberNavController(),
-    startDestination: String = Screen.Landing.route
+    startDestination: String = Screen.SplashScreen.route
 ) {
     NavHost(navController = navController, startDestination = startDestination) {
+        composable(Screen.SplashScreen.route) {
+            SplashScreen(
+                onNavigateToDashboard = {
+                    navController.navigate(Screen.Dashboard.route) {
+                        popUpTo(Screen.SplashScreen.route) { inclusive = true }
+                    }
+                },
+                onNavigateToLanding = {
+                    navController.navigate(Screen.Landing.route) {
+                        popUpTo(Screen.SplashScreen.route) { inclusive = true }
+                    }
+                }
+            )
+        }
         composable(Screen.Landing.route) {
             LandingScreen(
                 onNavigateToLogin = {
